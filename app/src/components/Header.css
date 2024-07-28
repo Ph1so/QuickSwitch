@@ -1,0 +1,15 @@
+/* Header.css */
+.header-container {
+  background-color: #007bff;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header {
+  font-size: 24px;
+  color: #ffffff;
+  font-weight: bold;
+  text-align: center;
+}
