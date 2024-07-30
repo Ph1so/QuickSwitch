@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import "./Links.css";
 
 export default function Links() {
@@ -11,9 +12,20 @@ export default function Links() {
     return playlistID;
   }
 
-  function copy() {
+  async function copy() {
     const spotifyID = getSpotifyID();
-    getPlaylist(spotifyID);
+    await getPlaylist(spotifyID);
+    if (playlistDetails) {
+      // Send the track names to the backend
+      try {
+        await axios.post("http://localhost:5000/upload-tracks", {
+          trackNames: playlistDetails,
+        });
+        console.log("Track names sent to the backend successfully.");
+      } catch (error) {
+        console.error("Error sending track names to the backend:", error);
+      }
+    }
   }
 
   async function getPlaylist(spotifyID) {
