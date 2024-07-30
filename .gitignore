@@ -11,8 +11,10 @@
 # production
 /build
 
-#env variables
 .env
+/venv
+client_secret_16280302699-9iq39f31ehb5402d37ghrlp82smod3la.apps.googleusercontent.com.json
+auth_test.py
 
 # misc
 .DS_Store
