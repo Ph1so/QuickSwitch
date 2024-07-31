@@ -43,7 +43,9 @@ export default function Links() {
       const playlist = await response.json();
       console.log("Playlist Details:", playlist);
 
-      const trackNames = playlist.items.map((item) => item.track.name);
+      const trackNames = playlist.items.map(
+        (item) => item.track.name + " by " + item.track.artists[0].name
+      );
       console.log("Track Names:", trackNames);
 
       setPlaylistDetails(trackNames);
