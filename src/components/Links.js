@@ -18,7 +18,7 @@ export default function Links() {
     if (playlistDetails) {
       // Send the track names to the backend
       try {
-        await axios.post("http://localhost:5000/upload-tracks", {
+        await axios.post("http://localhost:3000/", {
           trackNames: playlistDetails,
         });
         console.log("Track names sent to the backend successfully.");
@@ -68,14 +68,14 @@ export default function Links() {
           onChange={(e) => setSpotifyLink(e.target.value)}
         />
       </div>
-      <div id="youtube">
+      {/* <div id="youtube">
         <div className="caption">Enter a Youtube Playlist Link</div>
         <input
           id="YoutubeLink"
           type="text"
           placeholder="https://www.youtube.com/playlist?list=PL4o29bINVT4EG_y-k5jGoOu3-Am8Nvi10"
         />
-      </div>
+      </div> */}
       <div id="submit">
         <button id="submitBtn" onClick={copy}>
           Copy to Youtube

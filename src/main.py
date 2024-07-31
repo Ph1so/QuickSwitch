@@ -1,37 +1,23 @@
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-from dotenv import load_dotenv
 import os
-import google.oauth2.credentials
+from dotenv import load_dotenv
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google_auth_oauthlib.flow import InstalledAppFlow
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+load_dotenv()
 
 app = Flask(__name__)
-
-@app.route('/upload-tracks', methods=['POST'])
-def upload_tracks():
-    data = request.json
-    track_names = data.get('trackNames', [])
-    print("Received track names:", track_names)
-    createPlaylist(track_names)
-    return jsonify({"status": "success", "trackNames": track_names})
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-spotify_client_id = os.getenv('SPOTIFU_CLIENT_ID')
-spotify_client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
+CORS(app)
 
 yt_api_key = os.getenv('YT_API_KEY')
 yt_client_secrets_file = os.getenv('YT_CLIENT_SECRETS_FILE')
 scopes = ['https://www.googleapis.com/auth/youtube']
 
 def get_service():
-    flow = InstalledAppFlow.from_client_secrets_file(yt_client_secrets_file, scopes)
-    credentials = flow.run_local_server()
+    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(yt_client_secrets_file, scopes)
+    credentials = flow.run_local_server(port=0)
     return build('youtube', 'v3', credentials=credentials)
 
 def add_video_to_playlist(youtube, playlist_id, video_id):
@@ -44,7 +30,6 @@ def add_video_to_playlist(youtube, playlist_id, video_id):
             }
         }
     }
-
     request = youtube.playlistItems().insert(
         part='snippet',
         body=request_body
@@ -65,39 +50,47 @@ def create_playlist(youtube, title, description, privacy_status):
         part='snippet,status',
         body=request_body
     )
-
     response = request.execute()
     return response['id']
 
 def get_video_id(youtube, track_name):
-  request = youtube.search().list(
-      part = 'snippet',
-      q=track_name,
-      type='video',
-      maxResults=1
-  )
-  response = request.execute()
-  return response['items'][0]['id']['videoId']
+    request = youtube.search().list(
+        part='snippet',
+        q=track_name,
+        type='video',
+        maxResults=1
+    )
+    response = request.execute()
+    return response['items'][0]['id']['videoId']
 
-def createPlaylist(track_names):
+def create_playlist_with_tracks(track_names):
     playlist_name = "Spotify copy"
     playlist_description = "description"
-    # Create a playlist given spotify tracks
     try:
-        youtube = get_service() 
+        youtube = get_service()
 
         video_ids = []
-
-        # Find the first youtube video that shares its name with the spotify track
         for track_name in track_names:
             video_id = get_video_id(youtube, track_name)
             video_ids.append(video_id)
 
         playlist_id = create_playlist(youtube=youtube, title=playlist_name, description=playlist_description, privacy_status="public")
 
-        # Add videos to playlist
         for video_id in video_ids:
             add_video_to_playlist(youtube=youtube, playlist_id=playlist_id, video_id=video_id)
 
-    except HttpError:
-        print("Rate Limit Exceeded. Please try again later.")
+    except HttpError as e:
+        print("An HTTP error occurred: %s" % e)
+
+@app.route('/', methods=['POST'])
+def upload_tracks():
+    data = request.json
+    track_names = data.get('trackNames', [])
+    print("YouTube API Key:", yt_api_key)
+    print("YouTube Client Secrets File Path:", yt_client_secrets_file)
+    print("Received track names:", track_names)
+    create_playlist_with_tracks(track_names)
+    return jsonify({"status": "success", "trackNames": track_names})
+
+if __name__ == '__main__':
+    app.run(port=3000)
